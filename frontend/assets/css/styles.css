@@ -217,7 +217,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--b0);color:var(-
 .src-b{font-size:8.5px;font-weight:600;padding:2px 6px;border-radius:3px;white-space:nowrap}
 .mtd{font-size:10px;color:var(--t2);white-space:nowrap}
 .modal-footer{padding:12px 28px;text-align:center;font-size:9.5px;color:var(--t3);border-top:1px solid var(--bd);flex-shrink:0}
-.anomaly-section{background:var(--b2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:0;display:flex;flex-direction:column}
+.anomaly-section{background:var(--b2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:0;display:flex;flex-direction:column;min-height:650px}
 .anomaly-section-title{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--t1);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
 .anomaly-icon{font-size:12px}
 .anomaly-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:8px}
@@ -229,7 +229,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--b0);color:var(-
 .anomaly-stat.medium .anomaly-stat-value{color:#8b7332}
 .anomaly-stat.low .anomaly-stat-value{color:#7b86a3}
 .anomaly-chart{background:var(--b1);border:1px solid var(--bd);border-radius:8px;padding:6px;height:120px;margin-bottom:8px}
-.anomaly-list{max-height:200px;overflow-y:auto;border:1px solid var(--bd);border-radius:8px;background:var(--b1);flex:1}
+.anomaly-list{max-height:450px;overflow-y:auto;border:1px solid var(--bd);border-radius:8px;background:var(--b1);flex:1}
 .anomaly-list::-webkit-scrollbar{width:3px}
 .anomaly-list::-webkit-scrollbar-track{background:transparent}
 .anomaly-list::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
@@ -248,7 +248,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--b0);color:var(-
 .anomaly-meta{display:flex;gap:4px;flex-wrap:wrap;font-size:7px;color:var(--t3)}
 .anomaly-meta span{background:rgba(181,168,130,.1);padding:1px 4px;border-radius:3px}
 .anomaly-empty{padding:20px;text-align:center;color:var(--t3);font-size:10px}
-.umkm-section{background:var(--b2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:0;display:flex;flex-direction:column}
+.umkm-section{background:var(--b2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:0;display:flex;flex-direction:column;min-height:650px}
 .umkm-summary{display:grid;gap:8px}
 .umkm-header{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.4px}
 .umkm-title{color:var(--sage)}
@@ -260,7 +260,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--b0);color:var(-
 .umkm-sectors{display:flex;flex-wrap:wrap;gap:4px}
 .umkm-sector-tag{display:inline-block;background:rgba(181,168,130,.15);color:var(--sage);padding:3px 8px;border-radius:4px;font-size:8.5px;font-weight:600}
 .umkm-list-title{font-size:9px;font-weight:700;color:var(--t1);margin-top:8px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
-.umkm-list{display:grid;gap:4px;max-height:280px;overflow-y:auto}
+.umkm-list{display:grid;gap:4px;max-height:400px;overflow-y:auto}
 .umkm-list::-webkit-scrollbar{width:3px}
 .umkm-list::-webkit-scrollbar-track{background:transparent}
 .umkm-list::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
@@ -277,9 +277,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--b0);color:var(-
 .umkm-rec-list{list-style:none;padding:0;margin:0}
 .umkm-rec-list li{font-size:7.5px;color:var(--t2);margin-bottom:2px;padding-left:10px;position:relative;line-height:1.3}
 .umkm-rec-list li::before{content:'→';position:absolute;left:0;color:var(--sage)}
-.umkm-opportunities{background:var(--b1);border:1px solid var(--bd);border-radius:8px;padding:8px;margin-top:8px}
+.umkm-opportunities{background:var(--b1);border:1px solid var(--bd);border-radius:8px;padding:8px;margin-top:8px;flex:1;display:flex;flex-direction:column;min-height:200px}
 .umkm-opp-title{font-size:9px;font-weight:700;color:var(--sage);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
-.umkm-opp-list{display:grid;gap:4px;max-height:180px;overflow-y:auto}
+.umkm-opp-list{display:grid;gap:4px;max-height:none;flex:1;overflow-y:auto}
 .umkm-opp-list::-webkit-scrollbar{width:2px}
 .umkm-opp-list::-webkit-scrollbar-track{background:transparent}
 .umkm-opp-list::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
@@ -289,7 +289,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--b0);color:var(-
 .opp-badge{background:rgba(139,115,50,.3);color:var(--olive);padding:1px 4px;border-radius:3px;font-weight:600;font-size:7px}
 .opp-value{background:rgba(181,168,130,.2);color:var(--sage);padding:1px 4px;border-radius:3px;font-weight:600;font-family:'JetBrains Mono',monospace;font-size:7px}
 .opp-util{color:white;padding:1px 4px;border-radius:3px;font-weight:600;font-size:6px}
-.umkm-capacity-chart{background:var(--b1);border:1px solid var(--bd);border-radius:8px;padding:6px;height:120px;margin-top:8px}
+.umkm-capacity-chart{background:var(--b1);border:1px solid var(--bd);border-radius:8px;padding:6px;height:100px;margin-top:8px}
 .umkm-empty{padding:20px;text-align:center;color:var(--t3);font-size:10px}
 @media(max-width:768px){.modal-kpis,.modal-summary-grid{grid-template-columns:repeat(2,1fr)}.modal-body{padding:12px 16px}.modal-top{padding:12px 16px}.pager{flex-direction:column}.anomaly-stats{grid-template-columns:repeat(2,1fr)}.umkm-stats-grid{grid-template-columns:repeat(2,1fr)}.dom-body > div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}}
 @media(max-width:640px){.modal-summary-grid{grid-template-columns:1fr}.modal-filters{flex-direction:column;align-items:stretch}.chk{justify-content:flex-start}}
