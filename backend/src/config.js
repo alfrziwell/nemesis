@@ -26,9 +26,7 @@ module.exports = {
   DATASET_DIR,
   GEO_ROOT_PATH,
   PORT: port,
-  CORS_ORIGIN: String(process.env.CORS_ORIGIN ?? "*")
-    .trim()
-    .replace(/^\uFEFF/, "") || "*",
+  CORS_ORIGIN: process.env.CORS_ORIGIN || "*",
   DB_PATH: resolveFromRoot(process.env.SQLITE_PATH, path.join("data", "dashboard.sqlite")),
   GEOJSON_PATH: resolveFromRoot(process.env.GEOJSON_PATH, path.join(GEO_ROOT_PATH, "03-districts")),
   PROVINCE_GEOJSON_PATH: resolveFromRoot(

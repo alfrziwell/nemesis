@@ -4,20 +4,13 @@ const { CORS_ORIGIN } = require("./config");
 const { getBootstrapPayload, getOwnerPackages, getRegionPackages, getProvincePackages } = require("./dashboard-repository");
 
 function resolveCorsOrigin() {
-  const normalized = String(CORS_ORIGIN || "*")
-    .trim()
-    .replace(/^\uFEFF/, "");
-
-  if (!normalized || normalized === "*") {
+  if (CORS_ORIGIN === "*") {
     return "*";
   }
 
-  const list = normalized
-    .split(",")
-    .map((item) => item.trim().replace(/^\uFEFF/, ""))
+  return CORS_ORIGIN.split(",")
+    .map((item) => item.trim())
     .filter(Boolean);
-
-  return list.length ? list : "*";
 }
 
 function createApp(db) {
