@@ -2,7 +2,6 @@
 **/node_modules/
 
 # Local runtime data (SQLite)
-backend/data/
 backend/dataset/
 
 # macOS
