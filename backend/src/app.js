@@ -4,21 +4,56 @@ const { CORS_ORIGIN } = require("./config");
 const { getBootstrapPayload, getOwnerPackages, getRegionPackages, getProvincePackages } = require("./dashboard-repository");
 
 function resolveCorsOrigin() {
-  if (CORS_ORIGIN === "*") {
-    return "*";
+  const rawValue = String(CORS_ORIGIN || "").trim();
+  if (!rawValue || rawValue === "*") {
+    return { allowAll: true, exactOrigins: [], wildcardOrigins: [] };
   }
 
-  return CORS_ORIGIN.split(",")
-    .map((item) => item.trim())
+  const origins = rawValue
+    .split(",")
+    .map((item) => item.trim().replace(/\/$/, ""))
     .filter(Boolean);
+
+  return {
+    allowAll: false,
+    exactOrigins: origins.filter((origin) => !origin.includes("*")),
+    wildcardOrigins: origins
+      .filter((origin) => origin.includes("*"))
+      .map((origin) => origin.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*")),
+  };
+}
+
+function isAllowedOrigin(requestOrigin, corsConfig) {
+  if (!requestOrigin) {
+    return true;
+  }
+
+  if (corsConfig.allowAll) {
+    return true;
+  }
+
+  const normalizedOrigin = requestOrigin.replace(/\/$/, "");
+  if (corsConfig.exactOrigins.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  return corsConfig.wildcardOrigins.some((pattern) => new RegExp(`^${pattern}$`).test(normalizedOrigin));
 }
 
 function createApp(db) {
   const app = express();
+  const corsConfig = resolveCorsOrigin();
 
   app.use(
     cors({
-      origin: resolveCorsOrigin(),
+      origin(origin, callback) {
+        if (isAllowedOrigin(origin, corsConfig)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error(`Origin ${origin} is not allowed by CORS`));
+      },
     })
   );
   app.use(express.json());
