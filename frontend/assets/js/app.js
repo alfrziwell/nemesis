@@ -9,7 +9,7 @@
   const state = {
     mapFilter: "central",
     tab: "all",
-    selectedAreaKey: null,
+    selectedAreaKey: "region-jawa-barat-kota-cimahi",
     selectedOwnerKey: null,
     search: "",
     sortBy: "waste",
@@ -64,6 +64,68 @@
     { key: "high", label: "High" },
     { key: "absurd", label: "Absurd" },
   ];
+
+  let cimahiOwnersCache = null;
+  let cimahiOwnersCacheTime = 0;
+
+  async function getCimahiOwners() {
+    // Cache untuk 30 detik
+    const now = Date.now();
+    if (cimahiOwnersCache && (now - cimahiOwnersCacheTime) < 30000) {
+      return cimahiOwnersCache;
+    }
+
+    try {
+      // Load all packages for Kota Cimahi
+      const params = new URLSearchParams({
+        page: "1",
+        pageSize: "1000",
+      });
+      
+      const response = await fetchJson(`/regions/region-jawa-barat-kota-cimahi/packages?${params.toString()}`);
+      const packages = response.items || [];
+      
+      // Group packages by owner
+      const ownerMap = new Map();
+      
+      packages.forEach((pkg) => {
+        const ownerName = pkg.ownerName || "Unknown";
+        if (!ownerMap.has(ownerName)) {
+          ownerMap.set(ownerName, {
+            ownerName,
+            ownerType: "central",
+            totalPackages: 0,
+            totalPriorityPackages: 0,
+            totalPotentialWaste: 0,
+            totalBudget: 0,
+            severityCounts: { high: 0, absurd: 0 },
+          });
+        }
+        
+        const owner = ownerMap.get(ownerName);
+        owner.totalPackages += 1;
+        owner.totalBudget += (pkg.budget || 0);
+        owner.totalPotentialWaste += (pkg.audit?.potensiPemborosan || 0);
+        
+        if (pkg.meta?.isPriority) {
+          owner.totalPriorityPackages += 1;
+        }
+        
+        if (pkg.audit?.severity === "high") {
+          owner.severityCounts.high += 1;
+        } else if (pkg.audit?.severity === "absurd") {
+          owner.severityCounts.absurd += 1;
+        }
+      });
+      
+      cimahiOwnersCache = Array.from(ownerMap.values());
+      cimahiOwnersCacheTime = now;
+      return cimahiOwnersCache;
+    } catch (error) {
+      console.warn("Failed to load Cimahi owners:", error);
+      return [];
+    }
+  }
 
   let dashboardData = null;
   let regionsByKey = new Map();
@@ -363,7 +425,7 @@
   function renderModalState(title, message, isError) {
     dom.modalTop.innerHTML =
       `<div class="modal-top-row"><div><h2>${escapeHtml(title)}</h2><div class="msub">Audit paket pengadaan &middot; TA 2026</div></div>` +
-      `<div style="display:flex;gap:8px;align-items:center"><button class="modal-close" onclick="${actionCall("closeRegionModal")}">&#10005; Tutup</button></div></div>`;
+      `<div style="display:flex;gap:8px;align-items:center"><button class="modal-close" onclick="${actionCall('closeRegionModal')}">&#10005; Tutup</button></div></div>`;
     dom.modalBody.innerHTML = `<div class="modal-state${isError ? " error" : ""}">${escapeHtml(message)}</div>`;
   }
 
@@ -514,8 +576,9 @@
   }
 
   function getFilteredOwnersForSidebar() {
-    let owners = getCentralOwnersForSidebar().slice();
-
+    // Use cached Cimahi owners instead of national owners
+    let owners = cimahiOwnersCache || [];
+    
     if (state.search) {
       const query = state.search.toLowerCase();
       owners = owners.filter((owner) => owner.ownerName.toLowerCase().includes(query));
@@ -535,29 +598,59 @@
   }
 
   function renderKpis() {
-    const summary = dashboardData.summary;
-    const mappedPackages = summary.totalPackages - summary.unmappedPackages;
+    // Get Kota Cimahi data specifically
+    const cimahiRegion = regionsByKey.get("region-jawa-barat-kota-cimahi");
+    
+    if (!cimahiRegion) {
+      // Fallback to summary if Kota Cimahi not found
+      const summary = dashboardData.summary;
+      const mappedPackages = summary.totalPackages - summary.unmappedPackages;
+      renderKpiCards([
+        {
+          label: "Total Potensi Pemborosan",
+          value: `Rp ${formatCompactCurrency(summary.totalPotentialWaste)}`,
+          sublabel: "Nilai nasional raw, tanpa duplikasi multi-lokasi",
+        },
+        {
+          label: "Paket Prioritas Audit",
+          value: formatNumber(summary.totalPriorityPackages),
+          sublabel: `${formatNumber(summary.totalPackages)} paket teraudit`,
+        },
+        {
+          label: "Total Pagu Teraudit",
+          value: `Rp ${formatCompactCurrency(summary.totalBudget)}`,
+          sublabel: "Akumulasi pagu dari seluruh artifact audit",
+        },
+        {
+          label: "Paket Terpetakan",
+          value: `${formatNumber(mappedPackages)} / ${formatNumber(summary.totalPackages)}`,
+          sublabel: `${formatNumber(summary.unmappedPackages)} unmapped | ${formatNumber(summary.multiLocationPackages)} multi-lokasi`,
+        },
+      ]);
+      return;
+    }
 
+    // Display Kota Cimahi specific data
     renderKpiCards([
       {
         label: "Total Potensi Pemborosan",
-        value: `Rp ${formatCompactCurrency(summary.totalPotentialWaste)}`,
-        sublabel: "Nilai nasional raw, tanpa duplikasi multi-lokasi",
+        value: `Rp ${formatCompactCurrency(cimahiRegion.totalPotentialWaste)}`,
+        sublabel: "Potensi pemborosan Kota Cimahi",
       },
       {
         label: "Paket Prioritas Audit",
-        value: formatNumber(summary.totalPriorityPackages),
-        sublabel: `${formatNumber(summary.totalPackages)} paket teraudit`,
+        value: formatNumber(cimahiRegion.totalPriorityPackages),
+        sublabel: `${formatNumber(cimahiRegion.totalPackages)} paket teraudit`,
       },
       {
         label: "Total Pagu Teraudit",
-        value: `Rp ${formatCompactCurrency(summary.totalBudget)}`,
-        sublabel: "Akumulasi pagu dari seluruh artifact audit",
+        value: `Rp ${formatCompactCurrency(cimahiRegion.totalBudget)}`,
+        sublabel: "Akumulasi pagu Kota Cimahi",
       },
       {
         label: "Paket Terpetakan",
-        value: `${formatNumber(mappedPackages)} / ${formatNumber(summary.totalPackages)}`,
-        sublabel: `${formatNumber(summary.unmappedPackages)} unmapped | ${formatNumber(summary.multiLocationPackages)} multi-lokasi`,
+        value: formatNumber(cimahiRegion.totalPackages),
+        sublabel: `${formatNumber(cimahiRegion.totalPackages)} paket di Kota Cimahi`,
       },
     ]);
   }
@@ -691,21 +784,19 @@
       return;
     }
 
-    const areas = getFilteredAreasForSidebar();
-
-    if (!areas.length) {
-      dom.sidebarContent.innerHTML =
-        sortControl() +
-        `<div class="panel-msg">Tidak ada ${escapeHtml(
-          isProvinceView() ? "provinsi" : "region"
-        )} yang cocok dengan filter saat ini.</div>`;
+    // Show only Kota Cimahi in sidebar
+    const cimahiRegion = regionsByKey.get("region-jawa-barat-kota-cimahi");
+    
+    if (!cimahiRegion) {
+      renderSidebarMessage("Data Kota Cimahi tidak tersedia.", true);
       return;
     }
 
-    const areaEntries = areas.map((area) => ({
-      area,
-      metrics: getSidebarAreaMetrics(area),
-    }));
+    const areaEntries = [{
+      area: cimahiRegion,
+      metrics: getSidebarAreaMetrics(cimahiRegion),
+    }];
+    
     const maxWaste = Math.max(...areaEntries.map(({ metrics }) => metrics.totalPotentialWaste), 1);
     const ownerLabel = activeSidebarOwnerLabel();
 
@@ -744,6 +835,18 @@
 
   function featureStyle(feature) {
     const areaKey = getFeatureAreaKey(feature);
+    
+    // Only show Kota Cimahi, hide all other areas
+    if (areaKey !== "region-jawa-barat-kota-cimahi") {
+      return {
+        fillColor: "#243155",
+        fillOpacity: 0,
+        strokeColor: "#b5a882",
+        strokeWidth: 0,
+        strokeOpacity: 0,
+      };
+    }
+    
     const area = getActiveAreaByKey(areaKey);
     const visible = areaMatchesCurrentView(area);
     const selected = state.selectedAreaKey === areaKey;
@@ -835,10 +938,14 @@
         getFeatureStyle: featureStyle,
         getPopupHtml: (areaKey) => popupHtml(getActiveAreaByKey(areaKey)),
         onAreaClick: openAreaModal,
-        fitBounds: fitToBounds,
+        fitBounds: false,
         isProvinceView: isProvinceView(),
       },
-      clearMapStatus
+      () => {
+        clearMapStatus();
+        // Auto-zoom to Kota Cimahi on initial load
+        setTimeout(() => AuditMap.zoomToArea("region-jawa-barat-kota-cimahi"), 800);
+      }
     );
   }
 
@@ -910,6 +1017,10 @@
   function renderRegionModalContent(payload) {
     const region = payload.region;
     const rowsHtml = renderPackageTableRows(payload.items);
+    
+    // Detect anomalies
+    const anomalies = window.AnomalyDetector ? AnomalyDetector.detectAnomalies(payload.items) : [];
+    const anomalyStats = window.AnomalyDetector ? AnomalyDetector.calculateAnomalyStats(anomalies) : null;
 
     dom.modalTop.innerHTML =
       `<div class="modal-top-row"><div><h2>${escapeHtml(region.displayName)}</h2><div class="msub">${escapeHtml(
@@ -917,9 +1028,7 @@
       )}</div></div>` +
       `<div style="display:flex;gap:8px;align-items:center"><span class="tbd ${areaBadgeClass(region)}">${escapeHtml(
         region.regionType
-      )}</span><button class="modal-close" onclick="${actionCall(
-        "closeRegionModal"
-      )}">&#10005; Tutup</button></div></div>` +
+      )}</span><button class="modal-close" onclick="${actionCall('closeRegionModal')}">&#10005; Tutup</button></div></div>` +
       `<div class="modal-kpis">` +
       `<div class="mkp"><div class="mkp-l">Potensi Pemborosan</div><div class="mkp-v" style="color:var(--brick)">Rp ${escapeHtml(
         formatCompactCurrency(region.totalPotentialWaste)
@@ -933,6 +1042,60 @@
       `<div class="mkp"><div class="mkp-l">Total Pagu</div><div class="mkp-v" style="color:var(--sage)">Rp ${escapeHtml(
         formatCompactCurrency(region.totalBudget)
       )}</div></div></div>`;
+
+    let anomalySection = '';
+    if (anomalies && anomalies.length > 0 && anomalyStats) {
+      anomalySection = `
+        <div class="anomaly-section">
+          <div class="anomaly-section-title">
+            <span class="anomaly-icon">⚠️</span>
+            Deteksi Anomali Anggaran (${anomalyStats.totalAnomalies})
+          </div>
+          <div class="anomaly-stats">
+            <div class="anomaly-stat critical">
+              <div class="anomaly-stat-label">Critical</div>
+              <div class="anomaly-stat-value">${anomalyStats.critical || 0}</div>
+            </div>
+            <div class="anomaly-stat high">
+              <div class="anomaly-stat-label">High</div>
+              <div class="anomaly-stat-value">${anomalyStats.high || 0}</div>
+            </div>
+            <div class="anomaly-stat medium">
+              <div class="anomaly-stat-label">Medium</div>
+              <div class="anomaly-stat-value">${anomalyStats.medium || 0}</div>
+            </div>
+            <div class="anomaly-stat low">
+              <div class="anomaly-stat-label">Low</div>
+              <div class="anomaly-stat-value">${anomalyStats.totalAnomalies - (anomalyStats.critical || 0) - (anomalyStats.high || 0) - (anomalyStats.medium || 0)}</div>
+            </div>
+          </div>
+          <div class="anomaly-chart" id="anomaly-type-chart-container">
+            <canvas id="anomaly-type-chart"></canvas>
+          </div>
+          <div class="anomaly-list" id="anomaly-list-container">
+            ${window.AnomalyDetector ? AnomalyDetector.generateAnomalyHtml(anomalies) : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Build UMKM section
+    let umkmSection = '';
+    if (window.UMKMAnalyzer) {
+      const regionUmkms = UMKMAnalyzer.getRegionUMKMs(state.modal.areaKey);
+      if (regionUmkms) {
+        const opportunities = UMKMAnalyzer.analyzePackageOpportunities(regionUmkms, payload.items);
+        umkmSection = `
+          <div class="umkm-section">
+            ${UMKMAnalyzer.generateUMKMSummary(regionUmkms)}
+            <div class="umkm-capacity-chart" id="umkm-capacity-chart-container">
+              <canvas id="umkm-capacity-chart"></canvas>
+            </div>
+            ${opportunities && opportunities.length > 0 ? UMKMAnalyzer.generateOpportunitiesList(opportunities, 8) : '<div class="umkm-empty">Tidak ada peluang untuk UMKM saat ini</div>'}
+          </div>
+        `;
+      }
+    }
 
     dom.modalBody.innerHTML =
       `<div class="modal-summary-grid">` +
@@ -952,6 +1115,14 @@
       `<div class="mini-stat"><span>Severity Absurd</span><strong>${escapeHtml(
         formatNumber(region.severityCounts.absurd)
       )}</strong></div>` +
+      `</div>` +
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;background:var(--b2);border:1px solid var(--bd);border-radius:10px;padding:10px;">` +
+      `<div><canvas id="area-severity-chart" style="max-height:160px"></canvas></div>` +
+      `<div><canvas id="area-owner-chart" style="max-height:160px"></canvas></div>` +
+      `</div>` +
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">` +
+      anomalySection +
+      umkmSection +
       `</div>` +
       `<div class="modal-filters">` +
       `<input type="text" placeholder="Cari paket, lembaga, atau satker..." value="${escapeAttr(
@@ -976,6 +1147,24 @@
       )} paket pada area ini</div>` +
       `<table class="rtbl"><thead><tr><th>ID</th><th>Nama Paket</th><th>Pemilik</th><th>Satker / Lokasi</th><th>Pagu</th><th>Severity</th><th>Alasan</th></tr></thead><tbody>${rowsHtml}</tbody></table>` +
       renderPagination(payload.pagination);
+
+    // Initialize charts for this region
+    if (window.DashboardViz && typeof DashboardViz.initAreaCharts === 'function') {
+      setTimeout(() => DashboardViz.initAreaCharts(region), 100);
+    }
+
+    // Initialize anomaly chart
+    if (window.AnomalyDetector && anomalies && anomalies.length > 0) {
+      setTimeout(() => AnomalyDetector.renderAnomalyChart(anomalies, 'anomaly-type-chart'), 150);
+    }
+
+    // Initialize UMKM capacity chart
+    if (window.UMKMAnalyzer) {
+      const regionUmkms = UMKMAnalyzer.getRegionUMKMs(state.modal.areaKey);
+      if (regionUmkms) {
+        setTimeout(() => UMKMAnalyzer.renderCapacityChart(regionUmkms, 'umkm-capacity-chart'), 200);
+      }
+    }
   }
 
   function renderProvinceModalContent(payload) {
@@ -984,9 +1173,7 @@
 
     dom.modalTop.innerHTML =
       `<div class="modal-top-row"><div><h2>${escapeHtml(province.displayName)}</h2><div class="msub">Paket pemprov pada provinsi ini &middot; TA 2026</div></div>` +
-      `<div style="display:flex;gap:8px;align-items:center"><span class="tbd ${areaBadgeClass(province)}">Provinsi</span><button class="modal-close" onclick="${actionCall(
-        "closeRegionModal"
-      )}">&#10005; Tutup</button></div></div>` +
+      `<div style="display:flex;gap:8px;align-items:center"><span class="tbd ${areaBadgeClass(province)}">Provinsi</span><button class="modal-close" onclick="${actionCall('closeRegionModal')}">&#10005; Tutup</button></div></div>` +
       `<div class="modal-kpis">` +
       `<div class="mkp"><div class="mkp-l">Potensi Pemborosan</div><div class="mkp-v" style="color:var(--brick)">Rp ${escapeHtml(
         formatCompactCurrency(province.totalPotentialWaste)
@@ -1048,9 +1235,7 @@
       `<div class="modal-top-row"><div><h2>${escapeHtml(owner.ownerName)}</h2><div class="msub">${escapeHtml(
         `${ownerTypeLabel(owner.ownerType)} | Audit paket nasional TA 2026`
       )}</div></div>` +
-      `<div style="display:flex;gap:8px;align-items:center"><span class="tbd bc">K/L</span><button class="modal-close" onclick="${actionCall(
-        "closeRegionModal"
-      )}">&#10005; Tutup</button></div></div>` +
+      `<div style="display:flex;gap:8px;align-items:center"><span class="tbd bc">K/L</span><button class="modal-close" onclick="${actionCall('closeRegionModal')}">&#10005; Tutup</button></div></div>` +
       `<div class="modal-kpis">` +
       `<div class="mkp"><div class="mkp-l">Potensi Pemborosan</div><div class="mkp-v" style="color:var(--brick)">Rp ${escapeHtml(
         formatCompactCurrency(owner.totalPotentialWaste)
@@ -1377,6 +1562,15 @@
       dashboardData = normalizeDashboardData(await fetchJson("/bootstrap"));
       regionsByKey = new Map(dashboardData.regions.map((region) => [region.regionKey, region]));
       provincesByKey = new Map(dashboardData.provinceView.provinces.map((province) => [province.provinceKey, province]));
+      
+      // Load UMKM data
+      if (window.UMKMAnalyzer) {
+        await UMKMAnalyzer.loadUMKMData();
+      }
+      
+      // Load Kota Cimahi owners data
+      await getCimahiOwners();
+      
       renderKpis();
       renderLegend();
       initMap();

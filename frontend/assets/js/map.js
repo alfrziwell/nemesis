@@ -11,6 +11,7 @@ window.AuditMap = (() => {
   let _isProvinceView = false;
   let _onAreaClick = null;
   let _getPopupHtml = null;
+  let _currentGeo = null;
 
   function getFeatureAreaKey(props) {
     return _isProvinceView ? props.provinceKey : props.regionKey;
@@ -149,9 +150,20 @@ window.AuditMap = (() => {
 
     map.on("mousemove", FILL_LAYER, (e) => {
       if (!e.features.length) return;
-
-      map.getCanvas().style.cursor = "pointer";
+      
       const feature = e.features[0];
+      const props = feature.properties;
+      const areaKey = getFeatureAreaKey(props);
+      
+      // Only respond to Kota Cimahi
+      if (areaKey !== "region-jawa-barat-kota-cimahi") {
+        map.getCanvas().style.cursor = "default";
+        clearHover();
+        return;
+      }
+      
+      map.getCanvas().style.cursor = "pointer";
+      
       const id = feature.id;
 
       if (hoveredId !== null && hoveredId !== id) {
@@ -160,8 +172,7 @@ window.AuditMap = (() => {
       hoveredId = id;
       map.setFeatureState({ source: SOURCE, id: id }, { hover: true });
 
-      if (_getPopupHtml && feature.properties) {
-        const areaKey = getFeatureAreaKey(feature.properties);
+      if (_getPopupHtml && props) {
         const html = _getPopupHtml(areaKey);
         if (html) {
           if (!popup) {
@@ -185,7 +196,10 @@ window.AuditMap = (() => {
 
     map.on("click", FILL_LAYER, (e) => {
       if (!e.features.length) return;
-      const areaKey = getFeatureAreaKey(e.features[0].properties);
+      const props = e.features[0].properties;
+      const areaKey = getFeatureAreaKey(props);
+      // Only allow clicks on Kota Cimahi
+      if (areaKey !== "region-jawa-barat-kota-cimahi") return;
       if (_onAreaClick) _onAreaClick(areaKey);
     });
   }
@@ -194,6 +208,7 @@ window.AuditMap = (() => {
     _isProvinceView = options.isProvinceView;
     _onAreaClick = options.onAreaClick;
     _getPopupHtml = options.getPopupHtml;
+    _currentGeo = geo;
 
     ensureMap(container);
 
@@ -229,9 +244,29 @@ window.AuditMap = (() => {
 
   function refresh(geo, getFeatureStyle) {
     if (!map?.getSource(SOURCE)) return;
+    _currentGeo = geo;
     clearHover();
     map.getSource(SOURCE).setData(buildStyledGeo(geo, getFeatureStyle));
   }
 
-  return { render, refresh, closePopup: clearHover };
+  function zoomToArea(areaName) {
+    if (!_currentGeo) return;
+    // areaName is regionKey like "region-jawa-barat-kota-cimahi"
+    const feature = _currentGeo.features.find(f => {
+      const key = _isProvinceView ? f.properties.provinceKey : f.properties.regionKey;
+      return key === areaName;
+    });
+    if (!feature) return;
+    const bounds = computeBounds({ type: "FeatureCollection", features: [feature] });
+    if (bounds) {
+      map.fitBounds(bounds, {
+        padding: 80,
+        duration: 800,
+        maxZoom: 11,
+        maxPitch: 0
+      });
+    }
+  }
+
+  return { render, refresh, closePopup: clearHover, zoomToArea };
 })();

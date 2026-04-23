@@ -8,12 +8,16 @@
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css"/>
 <link rel="stylesheet" href="assets/css/styles.css?v=2"/>
 <script defer src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script defer src="assets/js/anomaly-detector.js"></script>
+<script defer src="assets/js/umkm-analyzer.js"></script>
 <script defer src="assets/js/map.js"></script>
+<script defer src="assets/js/dashboard.js"></script>
 <script defer src="assets/js/app.js"></script>
 </head>
 <body>
 <div class="hdr">
-<div class="hdr-l"><div class="logo">AUD</div><div class="hdr-t"><h1>Audit Pengadaan per Kab/Kota</h1><span>Artifact hasil analyze &middot; LKPP / SiRUP &middot; Tahun Anggaran 2026</span></div></div>
+<div class="hdr-l"><div class="logo">AUD</div><div class="hdr-t"><h1>Audit Pengadaan Kota Cimahi</h1><span>Artifact hasil analyze &middot; LKPP / SiRUP &middot; Tahun Anggaran 2026</span></div></div>
 <div class="hdr-r"><div class="ll"><span class="ldot"></span> LIVE</div><div class="yr">TA 2026</div><button class="mobile-kpi-btn" onclick="document.getElementById('kpi').classList.toggle('open')">📊 KPI</button></div>
 </div>
 <div class="kpi-backdrop" onclick="document.getElementById('kpi').classList.remove('open')"></div>

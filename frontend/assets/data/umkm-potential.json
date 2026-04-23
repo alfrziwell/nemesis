@@ -1,0 +1,107 @@
+{
+  "region-jawa-barat-kota-cimahi": {
+    "regionName": "Kota Cimahi",
+    "province": "Jawa Barat",
+    "umkms": [
+      {
+        "id": "umkm-cimahi-001",
+        "name": "CV. Makmur Sejahtera",
+        "sector": "Konstruksi & Infrastruktur",
+        "category": "Bangunan",
+        "description": "Kontraktor khusus renovasi dan maintenance gedung",
+        "capacity": 2500000000,
+        "workers": 45,
+        "certifications": ["SKK", "ISO 9001"],
+        "contactPerson": "Budi Santoso",
+        "phone": "+62-274-1234567",
+        "email": "info@makmursejahtera.com",
+        "location": "Jl. Siliwangi No. 25, Cimahi",
+        "experience": 12,
+        "portfolio": "Renovasi kantor pemerintah, rumah sakit, sekolah"
+      },
+      {
+        "id": "umkm-cimahi-002",
+        "name": "PT. Teknisi Cerdas Indonesia",
+        "sector": "Teknologi & Telekomunikasi",
+        "category": "Layanan IT",
+        "description": "Penyedia solusi teknologi informasi dan maintenance server",
+        "capacity": 1500000000,
+        "workers": 28,
+        "certifications": ["Microsoft Gold Partner", "ISO 27001"],
+        "contactPerson": "Ir. Ade Wijaya",
+        "phone": "+62-274-2345678",
+        "email": "sales@teknicer.co.id",
+        "location": "Jl. Pendidikan No. 42, Cimahi",
+        "experience": 8,
+        "portfolio": "Implementasi ERP, database, network infrastructure"
+      },
+      {
+        "id": "umkm-cimahi-003",
+        "name": "Koperasi Mandiri Cimahi",
+        "sector": "Perdagangan & Logistik",
+        "category": "Supplier Barang",
+        "description": "Distributor peralatan kantor dan supplies umum",
+        "capacity": 800000000,
+        "workers": 15,
+        "certifications": ["PKP", "NPWP"],
+        "contactPerson": "Drs. Hendra Gunawan",
+        "phone": "+62-274-3456789",
+        "email": "order@kopmandiri.id",
+        "location": "Jl. Raya Utama No. 88, Cimahi",
+        "experience": 6,
+        "portfolio": "Supplier untuk 50+ institusi pemerintah dan swasta"
+      },
+      {
+        "id": "umkm-cimahi-004",
+        "name": "Kreasi Profesional Advertising",
+        "sector": "Jasa Kreatif & Desain",
+        "category": "Jasa Kreatif",
+        "description": "Agency desain grafis, fotografi, dan produksi konten",
+        "capacity": 600000000,
+        "workers": 12,
+        "certifications": ["HAKI", "Terdata e-commerce"],
+        "contactPerson": "Siti Nurhaliza",
+        "phone": "+62-274-4567890",
+        "email": "hello@kreasi-pro.com",
+        "location": "Jl. Industri No. 15, Cimahi",
+        "experience": 5,
+        "portfolio": "Kampanye untuk BUMN, branding perusahaan multinasional"
+      },
+      {
+        "id": "umkm-cimahi-005",
+        "name": "PT. Solusi Cleaning Services",
+        "sector": "Jasa Layanan",
+        "category": "Jasa Kebersihan",
+        "description": "Penyedia layanan cleaning dan housekeeping profesional",
+        "capacity": 400000000,
+        "workers": 85,
+        "certifications": ["Sertifikat K3", "ISO 9001"],
+        "contactPerson": "Bambang Sutrisno",
+        "phone": "+62-274-5678901",
+        "email": "service@solutioncleaning.com",
+        "location": "Jl. Gatot Subroto No. 5, Cimahi",
+        "experience": 7,
+        "portfolio": "Maintenance rutin 30+ gedung kantor dan mal"
+      }
+    ],
+    "opportunities": {
+      "total_potential_value": 5280000000,
+      "estimated_umkm_capacity_utilization": 0.45,
+      "priority_sectors": [
+        "Konstruksi & Infrastruktur",
+        "Teknologi & Telekomunikasi",
+        "Perdagangan & Logistik"
+      ],
+      "challenges": [
+        "Keterbatasan akses informasi procurement",
+        "Kapasitas produksi masih terbatas",
+        "Kurangnya sertifikasi internasional"
+      ],
+      "recommendations": [
+        "Fasilitasi UMKM akses portal e-procurement",
+        "Program pelatihan sertifikasi dan quality control",
+        "Clustering UMKM untuk paket besar"
+      ]
+    }
+  }
+}
