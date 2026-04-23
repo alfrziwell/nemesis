@@ -1,5 +1,4 @@
 # Dependencies
-**/node_modules/
 
 # Local runtime data (SQLite)
 backend/dataset/
