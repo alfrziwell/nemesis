@@ -1,61 +1,31 @@
 const express = require("express");
 const cors = require("cors");
 const { CORS_ORIGIN } = require("./config");
-const { openDatabase } = require("./db");
-const { ensureOwnerMetricsCompatibility, ensureRegionMetricsCompatibility } = require("./seed");
 const { getBootstrapPayload, getOwnerPackages, getRegionPackages, getProvincePackages } = require("./dashboard-repository");
 
 function resolveCorsOrigin() {
-  const rawValue = String(CORS_ORIGIN || "").trim();
-  if (!rawValue || rawValue === "*") {
-    return { allowAll: true, exactOrigins: [], wildcardOrigins: [] };
+  const normalized = String(CORS_ORIGIN || "*")
+    .trim()
+    .replace(/^\uFEFF/, "");
+
+  if (!normalized || normalized === "*") {
+    return "*";
   }
 
-  const origins = rawValue
+  const list = normalized
     .split(",")
-    .map((item) => item.trim().replace(/\/$/, ""))
+    .map((item) => item.trim().replace(/^\uFEFF/, ""))
     .filter(Boolean);
 
-  return {
-    allowAll: false,
-    exactOrigins: origins.filter((origin) => !origin.includes("*")),
-    wildcardOrigins: origins
-      .filter((origin) => origin.includes("*"))
-      .map((origin) => origin.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*")),
-  };
-}
-
-function isAllowedOrigin(requestOrigin, corsConfig) {
-  if (!requestOrigin) {
-    return true;
-  }
-
-  if (corsConfig.allowAll) {
-    return true;
-  }
-
-  const normalizedOrigin = requestOrigin.replace(/\/$/, "");
-  if (corsConfig.exactOrigins.includes(normalizedOrigin)) {
-    return true;
-  }
-
-  return corsConfig.wildcardOrigins.some((pattern) => new RegExp(`^${pattern}$`).test(normalizedOrigin));
+  return list.length ? list : "*";
 }
 
 function createApp(db) {
   const app = express();
-  const corsConfig = resolveCorsOrigin();
 
   app.use(
     cors({
-      origin(origin, callback) {
-        if (isAllowedOrigin(origin, corsConfig)) {
-          callback(null, true);
-          return;
-        }
-
-        callback(new Error(`Origin ${origin} is not allowed by CORS`));
-      },
+      origin: resolveCorsOrigin(),
     })
   );
   app.use(express.json());
@@ -117,51 +87,6 @@ function createApp(db) {
   return app;
 }
 
-let serverlessApp = null;
-
-function assertDashboardSchema(db) {
-  const hasRegions = db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'regions'")
-    .get();
-
-  if (!hasRegions) {
-    throw new Error("Audit dashboard schema was not found. Run db:reset or import a database.");
-  }
-}
-
-function getServerlessApp() {
-  if (serverlessApp) {
-    return serverlessApp;
-  }
-
-  const db = openDatabase();
-  assertDashboardSchema(db);
-
-  if (ensureRegionMetricsCompatibility(db)) {
-    console.log("Region metrics schema was outdated. Rebuilt owner-scoped aggregates.");
-  }
-
-  if (ensureOwnerMetricsCompatibility(db)) {
-    console.log("Owner metrics table was missing or outdated. Rebuilt national owner aggregates.");
-  }
-
-  db.exec("CREATE INDEX IF NOT EXISTS idx_packages_owner_lookup ON packages(owner_type, owner_name);");
-  serverlessApp = createApp(db);
-  return serverlessApp;
-}
-
-function vercelHandler(req, res) {
-  try {
-    return getServerlessApp()(req, res);
-  } catch (error) {
-    console.error(error);
-    if (!res.headersSent) {
-      res.status(503).json({ error: "Database not ready", detail: error instanceof Error ? error.message : String(error) });
-    }
-  }
-}
-
 module.exports = {
   createApp,
-  default: vercelHandler,
 };
