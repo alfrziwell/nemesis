@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { DATA_DIR, DB_PATH, PORT } = require("./config");
+const { DATA_DIR, DB_PATH, PORT, SQLITE_READONLY } = require("./config");
 const { hasApplicationSchema, listExistingSqliteFiles, openDatabase, resolveRuntimeDbPath } = require("./db");
 const { isImportableDatabaseFile } = require("./db-transfer");
 const { ensureOwnerMetricsCompatibility, ensureRegionMetricsCompatibility } = require("./seed");
@@ -65,15 +65,19 @@ if (!hasSchema) {
   process.exit(1);
 }
 
-if (ensureRegionMetricsCompatibility(db)) {
-  console.log("Region metrics schema was outdated. Rebuilt owner-scoped aggregates.");
-}
+if (!SQLITE_READONLY) {
+  if (ensureRegionMetricsCompatibility(db)) {
+    console.log("Region metrics schema was outdated. Rebuilt owner-scoped aggregates.");
+  }
 
-if (ensureOwnerMetricsCompatibility(db)) {
-  console.log("Owner metrics table was missing or outdated. Rebuilt national owner aggregates.");
-}
+  if (ensureOwnerMetricsCompatibility(db)) {
+    console.log("Owner metrics table was missing or outdated. Rebuilt national owner aggregates.");
+  }
 
-db.exec("CREATE INDEX IF NOT EXISTS idx_packages_owner_lookup ON packages(owner_type, owner_name);");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_packages_owner_lookup ON packages(owner_type, owner_name);");
+} else {
+  console.log("SQLite read-only mode enabled: skipping schema/index migration steps.");
+}
 
 const app = createApp(db);
 const server = app.listen(PORT, () => {

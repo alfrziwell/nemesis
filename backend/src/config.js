@@ -10,6 +10,12 @@ function resolveFromRoot(value, fallback) {
   return path.isAbsolute(target) ? target : path.join(ROOT_DIR, target);
 }
 
+function parseBoolean(value) {
+  if (typeof value !== "string") return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
+
 const port = Number(process.env.PORT || 3000);
 
 if (!Number.isInteger(port) || port <= 0) {
@@ -19,6 +25,9 @@ if (!Number.isInteger(port) || port <= 0) {
 const DATA_DIR = resolveFromRoot(process.env.DATA_DIR, "data");
 const DATASET_DIR = resolveFromRoot(process.env.AUDIT_DATASET_DIR, "dataset");
 const GEO_ROOT_PATH = resolveFromRoot(process.env.GEO_ROOT_PATH, path.join("seed", "geo"));
+
+const IS_VERCEL = parseBoolean(process.env.VERCEL) || parseBoolean(process.env.NOW_REGION);
+const SQLITE_READONLY = parseBoolean(process.env.SQLITE_READONLY) || IS_VERCEL;
 
 module.exports = {
   ROOT_DIR,
@@ -35,6 +44,8 @@ module.exports = {
   ),
   AUDIT_DATASET_DIR: DATASET_DIR,
   AUDIT_DATASET_YEAR: String(process.env.AUDIT_DATASET_YEAR || "2026").trim(),
+  SQLITE_READONLY,
+  IS_VERCEL,
   DEFAULT_REGION_PAGE_SIZE: 25,
   MAX_REGION_PAGE_SIZE: 100,
 };
