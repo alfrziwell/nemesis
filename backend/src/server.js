@@ -76,22 +76,31 @@ if (ensureOwnerMetricsCompatibility(db)) {
 db.exec("CREATE INDEX IF NOT EXISTS idx_packages_owner_lookup ON packages(owner_type, owner_name);");
 
 const app = createApp(db);
-const server = app.listen(PORT, () => {
-  console.log(`Dashboard backend listening on http://127.0.0.1:${PORT}`);
-  console.log(`SQLite database: ${runtimeDbPath}`);
-});
+
+// ⬇️ ini penting buat cPanel / Passenger
+let server;
+
+if (require.main === module) {
+  server = app.listen(PORT, () => {
+    console.log(`Dashboard backend listening on http://127.0.0.1:${PORT}`);
+    console.log(`SQLite database: ${runtimeDbPath}`);
+  });
+}
 
 function shutdown(signal) {
   console.log(`${signal} received, shutting down...`);
-  server.close(() => {
+
+  if (server) {
+    server.close(() => {
+      db.close();
+      process.exit(0);
+    });
+  } else {
     db.close();
     process.exit(0);
-  });
+  }
 
   setTimeout(() => {
     process.exit(1);
   }, 5000).unref();
 }
-
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
