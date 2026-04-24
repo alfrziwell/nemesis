@@ -3,24 +3,39 @@ const cors = require("cors");
 const { CORS_ORIGIN } = require("./config");
 const { getBootstrapPayload, getOwnerPackages, getRegionPackages, getProvincePackages } = require("./dashboard-repository");
 
+function sanitizeOriginToken(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^['\"]|['\"]$/g, "");
+}
+
 function resolveCorsOrigin() {
-  if (CORS_ORIGIN === "*") {
+  const normalized = sanitizeOriginToken(CORS_ORIGIN);
+
+  if (!normalized || normalized === "*") {
     return "*";
   }
 
-  return CORS_ORIGIN.split(",")
-    .map((item) => item.trim())
+  const allowList = normalized
+    .split(",")
+    .map((item) => sanitizeOriginToken(item))
     .filter(Boolean);
+
+  if (!allowList.length || allowList.includes("*")) {
+    return "*";
+  }
+
+  return allowList;
 }
 
 function createApp(db) {
   const app = express();
+  const corsOptions = {
+    origin: resolveCorsOrigin(),
+  };
 
-  app.use(
-    cors({
-      origin: resolveCorsOrigin(),
-    })
-  );
+  app.use(cors(corsOptions));
+  app.options("*", cors(corsOptions));
   app.use(express.json());
 
   app.get("/api/health", (_req, res) => {
