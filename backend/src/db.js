@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
-const { DATA_DIR, DB_PATH } = require("./config");
+const { DATA_DIR, DB_PATH, SQLITE_READONLY } = require("./config");
 
 const SQLITE_EXTENSIONS = new Set([".sqlite", ".sqlite3", ".db"]);
 const REQUIRED_SCHEMA_TABLES = ["packages", "regions"];
@@ -64,11 +64,24 @@ function ensureDataDirectory() {
 }
 
 function openDatabase() {
-  ensureDataDirectory();
-  const runtimeDbPath = resolveRuntimeDbPath();
+  if (!SQLITE_READONLY) {
+    ensureDataDirectory();
+  }
 
-  const db = new Database(runtimeDbPath);
-  db.pragma("journal_mode = WAL");
+  const runtimeDbPath = resolveRuntimeDbPath();
+  const openOptions = SQLITE_READONLY
+    ? {
+        readonly: true,
+        fileMustExist: true,
+      }
+    : undefined;
+
+  const db = new Database(runtimeDbPath, openOptions);
+
+  if (!SQLITE_READONLY) {
+    db.pragma("journal_mode = WAL");
+  }
+
   db.pragma("foreign_keys = ON");
 
   return db;

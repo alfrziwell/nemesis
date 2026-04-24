@@ -19,12 +19,16 @@ if (!Number.isInteger(port) || port <= 0) {
 const DATA_DIR = resolveFromRoot(process.env.DATA_DIR, "data");
 const DATASET_DIR = resolveFromRoot(process.env.AUDIT_DATASET_DIR, "dataset");
 const GEO_ROOT_PATH = resolveFromRoot(process.env.GEO_ROOT_PATH, path.join("seed", "geo"));
+const isVercel = String(process.env.VERCEL || "").trim() === "1";
+const sqliteReadonly = String(process.env.SQLITE_READONLY || (isVercel ? "true" : "false")).trim() === "true";
 
 module.exports = {
   ROOT_DIR,
   DATA_DIR,
   DATASET_DIR,
   GEO_ROOT_PATH,
+  IS_VERCEL: isVercel,
+  SQLITE_READONLY: sqliteReadonly,
   PORT: port,
   CORS_ORIGIN: String(process.env.CORS_ORIGIN || "*").trim(),
   DB_PATH: resolveFromRoot(process.env.SQLITE_PATH, path.join("data", "dashboard.sqlite")),
