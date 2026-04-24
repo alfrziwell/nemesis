@@ -30,15 +30,16 @@ function resolveCorsOrigin() {
 
 function createApp(db) {
   const app = express();
+  const corsOrigin = resolveCorsOrigin();
   const corsOptions = {
-    origin: resolveCorsOrigin(),
-    credentials: true,
+    origin: corsOrigin,
+    credentials: corsOrigin !== "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   };
 
   app.use(cors(corsOptions));
-  app.options("*", cors(corsOptions));
+  app.options(/.*/, cors(corsOptions));
   app.use(express.json());
 
   app.get("/api/health", (_req, res) => {
