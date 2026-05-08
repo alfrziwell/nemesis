@@ -1,5 +1,5 @@
 (() => {
-  const API_BASE_URL = ("https://apinemsis.soundofiwu.com/").replace(/\/$/, "");
+  const API_BASE_URL = (window.DASHBOARD_API_BASE_URL || "https://backend-kelompok-4.vercel.app/api").replace(/\/$/, "");
 
   if (!window.maplibregl || !window.AuditMap) {
     console.error("MapLibre GL or AuditMap failed to load.");
