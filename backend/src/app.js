@@ -45,6 +45,7 @@ function createApp(db) {
   };
 
   app.use(cors(corsOptions));
+  // Use regex for Express 5 compatibility instead of "*"
   app.options(/.*/, cors(corsOptions));
   app.use(express.json());
 
