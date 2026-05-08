@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "buildCommand": "npm ci",
+  "outputDirectory": ".",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    }
+  ],
+  "env": {
+    "PORT": "3000",
+    "CORS_ORIGIN": "https://nemesis-kelompok-4.vercel.app",
+    "READ_ONLY_DB": "1",
+    "AUDIT_DATASET_YEAR": "2026"
+  },
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "data/**,seed/**"
+      }
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 10,
+      "memory": 3008
+    }
+  }
+}

@@ -5,4 +5,6 @@ const { createApp } = require("../src/app");
 const isServerless = !!process.env.VERCEL || process.env.READ_ONLY_DB === '1';
 const db = openDatabase({ readOnly: isServerless });
 
+const app = createApp(db);
+
 module.exports = (req, res) => app(req, res);

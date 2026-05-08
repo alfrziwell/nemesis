@@ -63,13 +63,19 @@ function ensureDataDirectory() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function openDatabase() {
+function openDatabase(options = {}) {
   ensureDataDirectory();
   const runtimeDbPath = resolveRuntimeDbPath();
 
-  const db = new Database(runtimeDbPath);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+  const db = new Database(runtimeDbPath, {
+    readonly: options.readOnly || false,
+    fileMustExist: options.readOnly || false
+  });
+  
+  if (!options.readOnly) {
+    db.pragma("journal_mode = WAL");
+    db.pragma("foreign_keys = ON");
+  }
 
   return db;
 }

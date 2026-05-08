@@ -3,10 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta id="api-config" data-api-base-url="https://backend-kelompok-4.vercel.app/api">
 <title>Audit Pengadaan Kab/Kota - LKPP 2026</title>
 <link rel="icon" href="data:,"/>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css"/>
 <link rel="stylesheet" href="assets/css/styles.css?v=2"/>
+<script>
+  // Set API URL from meta tag or environment
+  const apiConfigMeta = document.getElementById('api-config');
+  const apiUrl = apiConfigMeta?.dataset.apiBaseUrl || window.DASHBOARD_API_BASE_URL || 'http://127.0.0.1:3000/api';
+  window.DASHBOARD_API_BASE_URL = apiUrl;
+</script>
 <script defer src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 <script defer src="assets/js/anomaly-detector.js"></script>
