@@ -12,6 +12,12 @@ function sanitizeOriginToken(value) {
 function resolveCorsOrigin() {
   const normalized = sanitizeOriginToken(CORS_ORIGIN);
 
+  // Default to wildcard if running on Vercel without explicit CORS_ORIGIN
+  if (!normalized && process.env.VERCEL) {
+    console.log("Running on Vercel without CORS_ORIGIN set, allowing all origins");
+    return "*";
+  }
+
   if (!normalized || normalized === "*") {
     return "*";
   }
