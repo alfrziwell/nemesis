@@ -15,19 +15,11 @@
     "READ_ONLY_DB": "1",
     "AUDIT_DATASET_YEAR": "2026"
   },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": "data/**,seed/**"
-      }
-    }
-  ],
   "functions": {
     "api/index.js": {
       "maxDuration": 10,
-      "memory": 3008
+      "memory": 3008,
+      "includeFiles": "data/**,seed/**"
     }
   }
 }
