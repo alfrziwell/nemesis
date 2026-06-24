@@ -1,5 +1,5 @@
 (() => {
-  const API_BASE_URL = (window.DASHBOARD_API_BASE_URL || "https://backend-kelompok-4.vercel.app/api").replace(/\/$/, "");
+  const API_BASE_URL = "https://backend-kelompok-4.vercel.app/api";
 
   if (!window.maplibregl || !window.AuditMap) {
     console.error("MapLibre GL or AuditMap failed to load.");
@@ -81,13 +81,13 @@
         page: "1",
         pageSize: "1000",
       });
-      
+
       const response = await fetchJson(`/regions/region-jawa-barat-kota-cimahi/packages?${params.toString()}`);
       const packages = response.items || [];
-      
+
       // Group packages by owner
       const ownerMap = new Map();
-      
+
       packages.forEach((pkg) => {
         const ownerName = pkg.ownerName || "Unknown";
         if (!ownerMap.has(ownerName)) {
@@ -101,23 +101,23 @@
             severityCounts: { high: 0, absurd: 0 },
           });
         }
-        
+
         const owner = ownerMap.get(ownerName);
         owner.totalPackages += 1;
         owner.totalBudget += (pkg.budget || 0);
         owner.totalPotentialWaste += (pkg.audit?.potensiPemborosan || 0);
-        
+
         if (pkg.meta?.isPriority) {
           owner.totalPriorityPackages += 1;
         }
-        
+
         if (pkg.audit?.severity === "high") {
           owner.severityCounts.high += 1;
         } else if (pkg.audit?.severity === "absurd") {
           owner.severityCounts.absurd += 1;
         }
       });
-      
+
       cimahiOwnersCache = Array.from(ownerMap.values());
       cimahiOwnersCacheTime = now;
       return cimahiOwnersCache;
@@ -578,7 +578,7 @@
   function getFilteredOwnersForSidebar() {
     // Use cached Cimahi owners instead of national owners
     let owners = cimahiOwnersCache || [];
-    
+
     if (state.search) {
       const query = state.search.toLowerCase();
       owners = owners.filter((owner) => owner.ownerName.toLowerCase().includes(query));
@@ -600,7 +600,7 @@
   function renderKpis() {
     // Get Kota Cimahi data specifically
     const cimahiRegion = regionsByKey.get("region-jawa-barat-kota-cimahi");
-    
+
     if (!cimahiRegion) {
       // Fallback to summary if Kota Cimahi not found
       const summary = dashboardData.summary;
@@ -711,8 +711,8 @@
     const placeholder = isCentralOwnerMode()
       ? "Cari kementerian/lembaga..."
       : isProvinceView()
-      ? "Cari provinsi..."
-      : "Cari kabupaten/kota...";
+        ? "Cari provinsi..."
+        : "Cari kabupaten/kota...";
 
     return (
       `<div class="sw"><span class="si">&#128269;</span><input type="text" placeholder="${escapeAttr(
@@ -786,7 +786,7 @@
 
     // Show only Kota Cimahi in sidebar
     const cimahiRegion = regionsByKey.get("region-jawa-barat-kota-cimahi");
-    
+
     if (!cimahiRegion) {
       renderSidebarMessage("Data Kota Cimahi tidak tersedia.", true);
       return;
@@ -796,7 +796,7 @@
       area: cimahiRegion,
       metrics: getSidebarAreaMetrics(cimahiRegion),
     }];
-    
+
     const maxWaste = Math.max(...areaEntries.map(({ metrics }) => metrics.totalPotentialWaste), 1);
     const ownerLabel = activeSidebarOwnerLabel();
 
@@ -835,7 +835,7 @@
 
   function featureStyle(feature) {
     const areaKey = getFeatureAreaKey(feature);
-    
+
     // Only show Kota Cimahi, hide all other areas
     if (areaKey !== "region-jawa-barat-kota-cimahi") {
       return {
@@ -846,7 +846,7 @@
         strokeOpacity: 0,
       };
     }
-    
+
     const area = getActiveAreaByKey(areaKey);
     const visible = areaMatchesCurrentView(area);
     const selected = state.selectedAreaKey === areaKey;
@@ -960,44 +960,43 @@
   function renderPackageTableRows(items) {
     return items.length
       ? items
-          .map((item) => {
-            const packageUrl = buildInaprocUrl(item.sourceId);
+        .map((item) => {
+          const packageUrl = buildInaprocUrl(item.sourceId);
 
-            return (
-              `<tr${
-                packageUrl
-                  ? ` class="package-row-link" tabindex="0" role="link" aria-label="${escapeAttr(
-                      `Buka ${item.packageName} di Inaproc`
-                    )}" onclick="${actionCall("openPackageDetail", item.sourceId)}" onkeydown="${actionExpr(
-                      `dashboardActions.handlePackageRowKeydown(event, ${jsArg(item.sourceId)})`
-                    )}"`
-                  : ""
-              }>` +
-              `<td class="mono">${escapeHtml(String(item.sourceId || item.id))}</td>` +
-              `<td class="pkg">${escapeHtml(item.packageName)}</td>` +
-              `<td><div class="tbl-owner">${escapeHtml(item.ownerName)}</div><div class="tbl-sub">${escapeHtml(
-                ownerTypeLabel(item.ownerType)
-              )}</div></td>` +
-              `<td><div class="tbl-owner">${escapeHtml(item.satker || "-")}</div><div class="tbl-sub">${escapeHtml(
-                item.locationRaw || "-"
-              )}</div></td>` +
-              `<td class="mono" style="color:var(--sage)">${escapeHtml(item.budget === null ? "-" : formatCurrencyLong(item.budget))}</td>` +
-              `<td><span class="sev-b" style="background:${escapeAttr(
-                item.audit.severity === "absurd"
-                  ? "rgba(212,169,153,.18)"
-                  : item.audit.severity === "high"
+          return (
+            `<tr${packageUrl
+              ? ` class="package-row-link" tabindex="0" role="link" aria-label="${escapeAttr(
+                `Buka ${item.packageName} di Inaproc`
+              )}" onclick="${actionCall("openPackageDetail", item.sourceId)}" onkeydown="${actionExpr(
+                `dashboardActions.handlePackageRowKeydown(event, ${jsArg(item.sourceId)})`
+              )}"`
+              : ""
+            }>` +
+            `<td class="mono">${escapeHtml(String(item.sourceId || item.id))}</td>` +
+            `<td class="pkg">${escapeHtml(item.packageName)}</td>` +
+            `<td><div class="tbl-owner">${escapeHtml(item.ownerName)}</div><div class="tbl-sub">${escapeHtml(
+              ownerTypeLabel(item.ownerType)
+            )}</div></td>` +
+            `<td><div class="tbl-owner">${escapeHtml(item.satker || "-")}</div><div class="tbl-sub">${escapeHtml(
+              item.locationRaw || "-"
+            )}</div></td>` +
+            `<td class="mono" style="color:var(--sage)">${escapeHtml(item.budget === null ? "-" : formatCurrencyLong(item.budget))}</td>` +
+            `<td><span class="sev-b" style="background:${escapeAttr(
+              item.audit.severity === "absurd"
+                ? "rgba(212,169,153,.18)"
+                : item.audit.severity === "high"
                   ? "rgba(168,60,46,.16)"
                   : item.audit.severity === "med"
                     ? "rgba(139,115,50,.16)"
                     : "rgba(123,134,163,.16)"
-              )};color:${escapeAttr(severityColor(item.audit.severity))}">${escapeHtml(
-                severityLabel(item.audit.severity)
-              )}</span></td>` +
-              `<td class="reason">${escapeHtml(item.audit.reason || "-")}</td>` +
-              `</tr>`
-            );
-          })
-          .join("")
+            )};color:${escapeAttr(severityColor(item.audit.severity))}">${escapeHtml(
+              severityLabel(item.audit.severity)
+            )}</span></td>` +
+            `<td class="reason">${escapeHtml(item.audit.reason || "-")}</td>` +
+            `</tr>`
+          );
+        })
+        .join("")
       : `<tr><td colspan="7" class="table-empty">Tidak ada paket untuk filter saat ini.</td></tr>`;
   }
 
@@ -1008,8 +1007,7 @@
         pagination.page - 1
       )}">Sebelumnya</button><div class="pager-text">Halaman ${escapeHtml(formatNumber(pagination.page))} / ${escapeHtml(
         formatNumber(pagination.totalPages)
-      )} &middot; ${escapeHtml(formatNumber(pagination.totalItems))} paket</div><button class="pager-btn" ${
-        pagination.page >= pagination.totalPages ? "disabled" : ""
+      )} &middot; ${escapeHtml(formatNumber(pagination.totalItems))} paket</div><button class="pager-btn" ${pagination.page >= pagination.totalPages ? "disabled" : ""
       } onclick="${actionCall("changeModalPage", pagination.page + 1)}">Berikutnya</button></div>`
     );
   }
@@ -1017,7 +1015,7 @@
   function renderRegionModalContent(payload) {
     const region = payload.region;
     const rowsHtml = renderPackageTableRows(payload.items);
-    
+
     // Detect anomalies
     const anomalies = window.AnomalyDetector ? AnomalyDetector.detectAnomalies(payload.items) : [];
     const anomalyStats = window.AnomalyDetector ? AnomalyDetector.calculateAnomalyStats(anomalies) : null;
@@ -1130,10 +1128,8 @@
       )}" oninput="${actionExpr("dashboardActions.setModalSearch(this.value)")}" />` +
       `<select onchange="${actionExpr("dashboardActions.setModalOwnerType(this.value)")}" aria-label="Filter jenis pemilik">` +
       `<option value="">Semua Pemilik</option><option value="central"${state.modal.ownerType === "central" ? " selected" : ""}>Kementerian/Lembaga</option>` +
-      `<option value="provinsi"${state.modal.ownerType === "provinsi" ? " selected" : ""}>Pemprov</option><option value="kabkota"${
-        state.modal.ownerType === "kabkota" ? " selected" : ""
-      }>Pemkot</option><option value="other"${
-        state.modal.ownerType === "other" ? " selected" : ""
+      `<option value="provinsi"${state.modal.ownerType === "provinsi" ? " selected" : ""}>Pemprov</option><option value="kabkota"${state.modal.ownerType === "kabkota" ? " selected" : ""
+      }>Pemkot</option><option value="other"${state.modal.ownerType === "other" ? " selected" : ""
       }>Others</option></select>` +
       `<select onchange="${actionExpr("dashboardActions.setModalSeverity(this.value)")}" aria-label="Filter severity">${renderSeverityFilterOptions(
         state.modal.severity
@@ -1339,13 +1335,13 @@
     const path =
       state.modal.areaType === "owner"
         ? (() => {
-            params.set("ownerType", state.modal.ownerType);
-            params.set("ownerName", state.modal.ownerName);
-            return `/owners/packages?${params.toString()}`;
-          })()
+          params.set("ownerType", state.modal.ownerType);
+          params.set("ownerName", state.modal.ownerName);
+          return `/owners/packages?${params.toString()}`;
+        })()
         : state.modal.areaType === "province"
-        ? `/provinces/${encodeURIComponent(state.modal.areaKey)}/packages?${params.toString()}`
-        : `/regions/${encodeURIComponent(state.modal.areaKey)}/packages?${params.toString()}`;
+          ? `/provinces/${encodeURIComponent(state.modal.areaKey)}/packages?${params.toString()}`
+          : `/regions/${encodeURIComponent(state.modal.areaKey)}/packages?${params.toString()}`;
 
     try {
       const payload = await fetchJson(path);
@@ -1562,15 +1558,15 @@
       dashboardData = normalizeDashboardData(await fetchJson("/bootstrap"));
       regionsByKey = new Map(dashboardData.regions.map((region) => [region.regionKey, region]));
       provincesByKey = new Map(dashboardData.provinceView.provinces.map((province) => [province.provinceKey, province]));
-      
+
       // Load UMKM data
       if (window.UMKMAnalyzer) {
         await UMKMAnalyzer.loadUMKMData();
       }
-      
+
       // Load Kota Cimahi owners data
       await getCimahiOwners();
-      
+
       renderKpis();
       renderLegend();
       initMap();
