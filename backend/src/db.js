@@ -64,7 +64,9 @@ function ensureDataDirectory() {
 }
 
 function openDatabase(options = {}) {
-  ensureDataDirectory();
+  if (!options.readOnly) {
+    ensureDataDirectory();
+  }
   const runtimeDbPath = resolveRuntimeDbPath();
 
   const db = new Database(runtimeDbPath, {
